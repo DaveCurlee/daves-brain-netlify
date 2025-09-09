@@ -1,0 +1,8 @@
+    [build]
+      command = "echo 'Netlify build starting...'"
+      publish = "dist" # The directory where your front-end files would go (optional for this setup)
+
+    [functions]
+      directory = "netlify/functions"
+      node_bundler = "esbuild"
+    
