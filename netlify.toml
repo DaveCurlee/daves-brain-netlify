@@ -1,6 +1,6 @@
 [build]
   functions = "netlify/functions"
-  publish = "dist"
+  publish = "/"
   command = "npm install --prefix=netlify/functions"
 
 [[headers]]
