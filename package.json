@@ -1,13 +1,12 @@
-    {
-      "name": "daves-brain-netlify",
-      "version": "1.0.0",
-      "description": "A serverless function for the Dave's Brain chatbot",
-      "main": "netlify/functions/qdrant-search.js",
-      "scripts": {
-        "start": "netlify dev"
-      },
-      "dependencies": {
-        "@qdrant/qdrant-client": "^1.8.0"
-      }
-    }
-    
+{
+  "name": "daves-brain-netlify",
+  "version": "1.0.0",
+  "description": "A serverless function for the Dave's Brain chatbot",
+  "main": "netlify/functions/qdrant-search.js",
+  "scripts": {
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.8.0"
+  }
+}
