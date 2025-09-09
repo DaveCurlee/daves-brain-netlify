@@ -1,34 +1,41 @@
-const { QdrantClient } = require('@qdrant/qdrant-client');
+import { QdrantClient } from '@qdrant/js-client-rest';
+
+const qdrantUrl = process.env.QDRANT_URL;
+const qdrantApiKey = process.env.QDRANT_API_KEY;
+const collectionName = 'daves-brain-chunks';
+
+const client = new QdrantClient({
+  url: qdrantUrl,
+  apiKey: qdrantApiKey,
+});
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ message: 'Method Not Allowed' }),
+    };
   }
 
   try {
     const { vector } = JSON.parse(event.body);
 
-    const qdrantClient = new QdrantClient({
-      url: process.env.QDRANT_URL,
-      apiKey: process.env.QDRANT_API_KEY,
-    });
-
-    const searchResult = await qdrantClient.search(process.env.COLLECTION_NAME, {
-      vector: vector,
-      limit: 3,
+    const searchResult = await client.query(collectionName, {
+      using: {
+        vector: vector,
+      },
       with_payload: true,
+      limit: 3,
     });
 
     return {
       statusCode: 200,
       body: JSON.stringify(searchResult),
     };
-
   } catch (error) {
-    console.error("Error in serverless function:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Failed to process search query." }),
+      body: JSON.stringify({ message: 'Internal Server Error', error: error.message }),
     };
   }
 };
