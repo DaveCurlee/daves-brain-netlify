@@ -1,21 +1,15 @@
 const { QdrantClient } = require('@qdrant/qdrant-client');
-const { pipeline } = require('@xenova/transformers');
 
 let qdrantClient;
-let embedder;
 
 // This function initializes the clients once per serverless function instance
-const initializeClients = async () => {
+const initializeClient = () => {
   if (!qdrantClient) {
     qdrantClient = new QdrantClient({
       url: process.env.QDRANT_URL,
       apiKey: process.env.QDRANT_API_KEY,
     });
     console.log("Qdrant client initialized.");
-  }
-  if (!embedder) {
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    console.log("Embedding model loaded.");
   }
 };
 
@@ -25,14 +19,10 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  await initializeClients();
+  initializeClient();
 
   try {
-    const { query } = JSON.parse(event.body);
-    
-    // Convert the user's query into a vector
-    const output = await embedder(query, { pooling: 'mean', normalize: true });
-    const vector = Array.from(output.data);
+    const { vector } = JSON.parse(event.body);
 
     // Search the Qdrant collection for the most relevant documents
     const searchResult = await qdrantClient.search(process.env.COLLECTION_NAME, {
