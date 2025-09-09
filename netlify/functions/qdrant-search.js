@@ -1,9 +1,11 @@
 const { QdrantClient } = require('@qdrant/qdrant-client');
+const { pipeline } = require('@xenova/transformers');
+const BATCH_SIZE = 10;
 
 let qdrantClient;
+let pipelinePromise;
 
-// This function initializes the clients once per serverless function instance
-const initializeClient = () => {
+const initialize = () => {
   if (!qdrantClient) {
     qdrantClient = new QdrantClient({
       url: process.env.QDRANT_URL,
@@ -11,27 +13,30 @@ const initializeClient = () => {
     });
     console.log("Qdrant client initialized.");
   }
+  if (!pipelinePromise) {
+    pipelinePromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
 };
 
 exports.handler = async (event) => {
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  initializeClient();
+  initialize();
 
   try {
-    const { vector } = JSON.parse(event.body);
+    const { query } = JSON.parse(event.body);
+    const extractor = await pipelinePromise;
+    const output = await extractor(query, { pooling: 'mean', normalize: true });
+    const vector = Array.from(output.data);
 
-    // Search the Qdrant collection for the most relevant documents
     const searchResult = await qdrantClient.search(process.env.COLLECTION_NAME, {
       vector: vector,
-      limit: 3, // Get the top 3 results
+      limit: 3,
       with_payload: true,
     });
 
-    // Return the search results to the front end
     return {
       statusCode: 200,
       body: JSON.stringify(searchResult),
